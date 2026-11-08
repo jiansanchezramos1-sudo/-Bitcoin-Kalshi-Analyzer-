@@ -1,187 +1,213 @@
-
-
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>Bitcoin Kalshi Analyzer</title>
-
 <style>
-
-body{margin:0;background:#101722;color:white;font-family:Arial;padding:18px}
-
-h2{margin-top:5px}
-
-.card{background:#1c2939;padding:16px;border-radius:14px;margin:12px 0}
-
-.price{font-size:32px;font-weight:bold}
-
-.row{display:flex;justify-content:space-between;margin:14px 0}
-
-button{padding:13px;border:0;border-radius:9px;background:#2684ff;color:white;font-weight:bold;width:100%}
-
-canvas{width:100%;height:220px}
-
-.up{color:#35d49a}.down{color:#ff6675}
-
-small{color:#aab6c5}
-
+body {
+  margin:0;
+  padding:20px;
+  background:#101722;
+  color:white;
+  font-family:Arial,sans-serif;
+}
+h2 {margin-top:5px}
+.card {
+  background:#1c2939;
+  padding:16px;
+  border-radius:12px;
+  margin-bottom:14px;
+}
+.price {
+  font-size:32px;
+  font-weight:bold;
+}
+.row {
+  display:flex;
+  justify-content:space-between;
+  margin:12px 0;
+}
+.value {font-weight:bold}
+.signal {
+  font-size:27px;
+  font-weight:bold;
+  text-align:center;
+  padding:15px;
+}
+.green {color:#20d88a}
+.red {color:#ff5656}
+.yellow {color:#ffc857}
+.small {color:#9eafc3;font-size:13px}
+button {
+  width:100%;
+  padding:14px;
+  border:0;
+  border-radius:9px;
+  background:#2878ff;
+  color:white;
+  font-size:16px;
+}
 </style>
-
 </head>
-
 <body>
 
 <h2>₿ Bitcoin UP/DOWN Analyzer</h2>
-
-<small>Kalshi 15 Minute • Practice Mode</small>
+<p class="small">Kalshi 15 Minute • Practice Mode</p>
 
 <div class="card">
-
-<small>SIMULATED BTC PRICE</small>
-
-<div class="price" id="price">$100,000.00</div>
-
-<small>Demonstration data only</small>
-
+  <p class="small">LIVE BTC PRICE</p>
+  <div class="price" id="price">Connecting...</div>
+  <p class="small" id="updated">Waiting for market data...</p>
 </div>
 
 <div class="card">
-
-<canvas id="chart" width="600" height="300"></canvas>
-
+  <div class="row">
+    <span>EMA 9</span>
+    <span class="value" id="ema9">--</span>
+  </div>
+  <div class="row">
+    <span>EMA 21</span>
+    <span class="value" id="ema21">--</span>
+  </div>
+  <div class="row">
+    <span>RSI 14</span>
+    <span class="value" id="rsi">--</span>
+  </div>
+  <div class="row">
+    <span>Trend</span>
+    <span class="value" id="trend">--</span>
+  </div>
 </div>
 
 <div class="card">
-
-<div class="row"><span>EMA 9</span><b id="ema9">--</b></div>
-
-<div class="row"><span>EMA 21</span><b id="ema21">--</b></div>
-
-<div class="row"><span>RSI</span><b id="rsi">--</b></div>
-
-<div class="row"><span>Trend</span><b id="trend">--</b></div>
-
+  <p class="small">ANALYZER SIGNAL</p>
+  <div class="signal yellow" id="signal">WAIT</div>
+  <p class="small" id="reason">Collecting closed candles...</p>
 </div>
 
 <div class="card">
-
-<small>ANALYZER SIGNAL</small>
-
-<h1 id="signal">WAIT</h1>
-
-<p id="reason">Collecting sample candles...</p>
-
+  <p class="small">DATA SOURCE</p>
+  <div id="status">Connecting to Bitcoin market...</div>
+  <p class="small">Analysis uses completed 1-minute candles.</p>
 </div>
 
-<button onclick="restart()">Restart simulation</button>
-
-<p><small>Educational simulator. Not connected to Kalshi. No real trading or guaranteed predictions.</small></p>
+<button onclick="updateData()">REFRESH NOW</button>
 
 <script>
+const API = "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=100";
+const PRICE_API = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT";
 
-let prices=[];
-
-let price=100000;
-
-function ema(data,period){
-
- let k=2/(period+1),v=data[0];
-
- for(let x of data.slice(1))v=x*k+v*(1-k);
-
- return v;
-
+function ema(values, period) {
+  const k = 2 / (period + 1);
+  let result = values[0];
+  for (let i = 1; i < values.length; i++) {
+    result = values[i] * k + result * (1 - k);
+  }
+  return result;
 }
 
-function rsi(data){
-
- let gain=0,loss=0;
-
- for(let i=data.length-14;i<data.length;i++){
-
- let d=data[i]-data[i-1];
-
- if(d>0)gain+=d;else loss-=d;
-
- }
-
- if(loss===0)return 100;
-
- return 100-100/(1+gain/loss);
-
+function calculateRSI(values, period=14) {
+  let gains = 0;
+  let losses = 0;
+  for (let i = values.length-period; i < values.length; i++) {
+    const change = values[i] - values[i-1];
+    if (change > 0) gains += change;
+    else losses -= change;
+  }
+  const avgGain = gains / period;
+  const avgLoss = losses / period;
+  if (avgLoss === 0) return 100;
+  return 100 - (100 / (1 + avgGain / avgLoss));
 }
 
-function update(){
+async function updateData() {
+  const status = document.getElementById("status");
+  status.textContent = "Updating live data...";
 
- price+=(Math.random()-.48)*100;
+  try {
+    const responses = await Promise.all([
+      fetch(API),
+      fetch(PRICE_API)
+    ]);
 
- prices.push(price);
+    if (!responses[0].ok || !responses[1].ok) {
+      throw new Error("Market data unavailable");
+    }
 
- if(prices.length>80)prices.shift();
+    const candles = await responses[0].json();
+    const live = await responses[1].json();
 
- document.getElementById("price").textContent=
+    // Exclude the candle that is still forming.
+    const closed = candles.slice(0, -1);
+    const closes = closed.map(c => Number(c[4]));
 
- "$"+price.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+    if (closes.length < 22) {
+      throw new Error("Not enough candle data");
+    }
 
- if(prices.length<22)return;
+    const e9 = ema(closes.slice(-30), 9);
+    const e21 = ema(closes.slice(-50), 21);
+    const rsi = calculateRSI(closes);
 
- let a=ema(prices.slice(-30),9),b=ema(prices.slice(-30),21),r=rsi(prices);
+    const last = closes[closes.length - 1];
+    const previous = closes[closes.length - 2];
 
- document.getElementById("ema9").textContent=a.toFixed(2);
+    let trend = "SIDEWAYS";
+    let signal = "WAIT";
+    let reason = "No clear direction.";
+    let color = "yellow";
 
- document.getElementById("ema21").textContent=b.toFixed(2);
+    if (e9 > e21 && last > e9 && rsi > 50 && rsi < 70) {
+      trend = "BULLISH";
+      signal = "UP";
+      reason = "EMA 9 above EMA 21; price and RSI confirm upward momentum.";
+      color = "green";
+    } else if (e9 < e21 && last < e9 && rsi < 50 && rsi > 30) {
+      trend = "BEARISH";
+      signal = "DOWN";
+      reason = "EMA 9 below EMA 21; price and RSI confirm downward momentum.";
+      color = "red";
+    } else {
+      reason = "Mixed indicators. Wait for confirmation.";
+    }
 
- document.getElementById("rsi").textContent=r.toFixed(1);
+    if (rsi >= 70 || rsi <= 30) {
+      signal = "WAIT";
+      reason = "RSI is at an extreme. Wait for confirmation.";
+      color = "yellow";
+    }
 
- let up=a>b&&r>50,down=a<b&&r<50;
+    document.getElementById("price").textContent =
+      "$" + Number(live.price).toLocaleString("en-US", {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      });
 
- let s=up?"UP":down?"DOWN":"WAIT";
+    document.getElementById("ema9").textContent = e9.toFixed(2);
+    document.getElementById("ema21").textContent = e21.toFixed(2);
+    document.getElementById("rsi").textContent = rsi.toFixed(2);
+    document.getElementById("trend").textContent = trend;
 
- let el=document.getElementById("signal");
+    const signalBox = document.getElementById("signal");
+    signalBox.textContent = signal;
+    signalBox.className = "signal " + color;
 
- el.textContent=s;el.className=up?"up":down?"down":"";
+    document.getElementById("reason").textContent = reason;
+    document.getElementById("updated").textContent =
+      "Last update: " + new Date().toLocaleTimeString();
 
- document.getElementById("trend").textContent=up?"Bullish":down?"Bearish":"Neutral";
-
- document.getElementById("reason").textContent=up?"EMA 9 above EMA 21; RSI confirms momentum.":down?"EMA 9 below EMA 21; RSI confirms weakness.":"Indicators do not agree.";
-
- draw();
-
+    status.textContent = "LIVE DATA CONNECTED • Binance BTC/USDT";
+  } catch (error) {
+    status.textContent = "Connection error: " + error.message;
+    document.getElementById("signal").textContent = "WAIT";
+    document.getElementById("reason").textContent =
+      "No reliable data. Do not trade.";
+  }
 }
 
-function draw(){
+updateData();
+setInterval(updateData, 10000);
+</script>
 
- let c=document.getElementById("chart"),ctx=c.getContext("2d");
-
- ctx.clearRect(0,0,c.width,c.height);
-
- let lo=Math.min(...prices),hi=Math.max(...prices);
-
- let range=hi-lo||1;
-
- ctx.beginPath();
-
- prices.forEach((v,i)=>{
-
- let x=i*c.width/(prices.length-1||1);
-
- let y=c.height-(v-lo)/range*(c.height-30)-15;
-
- if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-
- });
-
- ctx.strokeStyle="#35d49a";ctx.lineWidth=3;ctx.stroke();
-
-}
-
-function restart(){prices=[];price=100000;update();}
-
-update();
-
-setInterval(update,2000);
+</body>
+</html>
