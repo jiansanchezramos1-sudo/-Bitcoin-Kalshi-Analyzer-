@@ -1,0 +1,187 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Bitcoin Kalshi Analyzer</title>
+
+<style>
+
+body{margin:0;background:#101722;color:white;font-family:Arial;padding:18px}
+
+h2{margin-top:5px}
+
+.card{background:#1c2939;padding:16px;border-radius:14px;margin:12px 0}
+
+.price{font-size:32px;font-weight:bold}
+
+.row{display:flex;justify-content:space-between;margin:14px 0}
+
+button{padding:13px;border:0;border-radius:9px;background:#2684ff;color:white;font-weight:bold;width:100%}
+
+canvas{width:100%;height:220px}
+
+.up{color:#35d49a}.down{color:#ff6675}
+
+small{color:#aab6c5}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>₿ Bitcoin UP/DOWN Analyzer</h2>
+
+<small>Kalshi 15 Minute • Practice Mode</small>
+
+<div class="card">
+
+<small>SIMULATED BTC PRICE</small>
+
+<div class="price" id="price">$100,000.00</div>
+
+<small>Demonstration data only</small>
+
+</div>
+
+<div class="card">
+
+<canvas id="chart" width="600" height="300"></canvas>
+
+</div>
+
+<div class="card">
+
+<div class="row"><span>EMA 9</span><b id="ema9">--</b></div>
+
+<div class="row"><span>EMA 21</span><b id="ema21">--</b></div>
+
+<div class="row"><span>RSI</span><b id="rsi">--</b></div>
+
+<div class="row"><span>Trend</span><b id="trend">--</b></div>
+
+</div>
+
+<div class="card">
+
+<small>ANALYZER SIGNAL</small>
+
+<h1 id="signal">WAIT</h1>
+
+<p id="reason">Collecting sample candles...</p>
+
+</div>
+
+<button onclick="restart()">Restart simulation</button>
+
+<p><small>Educational simulator. Not connected to Kalshi. No real trading or guaranteed predictions.</small></p>
+
+<script>
+
+let prices=[];
+
+let price=100000;
+
+function ema(data,period){
+
+ let k=2/(period+1),v=data[0];
+
+ for(let x of data.slice(1))v=x*k+v*(1-k);
+
+ return v;
+
+}
+
+function rsi(data){
+
+ let gain=0,loss=0;
+
+ for(let i=data.length-14;i<data.length;i++){
+
+ let d=data[i]-data[i-1];
+
+ if(d>0)gain+=d;else loss-=d;
+
+ }
+
+ if(loss===0)return 100;
+
+ return 100-100/(1+gain/loss);
+
+}
+
+function update(){
+
+ price+=(Math.random()-.48)*100;
+
+ prices.push(price);
+
+ if(prices.length>80)prices.shift();
+
+ document.getElementById("price").textContent=
+
+ "$"+price.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+
+ if(prices.length<22)return;
+
+ let a=ema(prices.slice(-30),9),b=ema(prices.slice(-30),21),r=rsi(prices);
+
+ document.getElementById("ema9").textContent=a.toFixed(2);
+
+ document.getElementById("ema21").textContent=b.toFixed(2);
+
+ document.getElementById("rsi").textContent=r.toFixed(1);
+
+ let up=a>b&&r>50,down=a<b&&r<50;
+
+ let s=up?"UP":down?"DOWN":"WAIT";
+
+ let el=document.getElementById("signal");
+
+ el.textContent=s;el.className=up?"up":down?"down":"";
+
+ document.getElementById("trend").textContent=up?"Bullish":down?"Bearish":"Neutral";
+
+ document.getElementById("reason").textContent=up?"EMA 9 above EMA 21; RSI confirms momentum.":down?"EMA 9 below EMA 21; RSI confirms weakness.":"Indicators do not agree.";
+
+ draw();
+
+}
+
+function draw(){
+
+ let c=document.getElementById("chart"),ctx=c.getContext("2d");
+
+ ctx.clearRect(0,0,c.width,c.height);
+
+ let lo=Math.min(...prices),hi=Math.max(...prices);
+
+ let range=hi-lo||1;
+
+ ctx.beginPath();
+
+ prices.forEach((v,i)=>{
+
+ let x=i*c.width/(prices.length-1||1);
+
+ let y=c.height-(v-lo)/range*(c.height-30)-15;
+
+ if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+
+ });
+
+ ctx.strokeStyle="#35d49a";ctx.lineWidth=3;ctx.stroke();
+
+}
+
+function restart(){prices=[];price=100000;update();}
+
+update();
+
+setInterval(update,2000);
