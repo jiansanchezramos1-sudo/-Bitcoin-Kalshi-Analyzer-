@@ -1,213 +1,186 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bitcoin Kalshi Analyzer</title>
 <style>
-body {
-  margin:0;
-  padding:20px;
-  background:#101722;
-  color:white;
-  font-family:Arial,sans-serif;
-}
-h2 {margin-top:5px}
-.card {
-  background:#1c2939;
-  padding:16px;
-  border-radius:12px;
-  margin-bottom:14px;
-}
-.price {
-  font-size:32px;
-  font-weight:bold;
-}
-.row {
-  display:flex;
-  justify-content:space-between;
-  margin:12px 0;
-}
-.value {font-weight:bold}
-.signal {
-  font-size:27px;
-  font-weight:bold;
-  text-align:center;
-  padding:15px;
-}
-.green {color:#20d88a}
-.red {color:#ff5656}
-.yellow {color:#ffc857}
-.small {color:#9eafc3;font-size:13px}
-button {
-  width:100%;
-  padding:14px;
-  border:0;
-  border-radius:9px;
-  background:#2878ff;
-  color:white;
-  font-size:16px;
-}
+*{box-sizing:border-box}
+body{margin:0;padding:18px;background:#080d18;color:#f1f5f9;font-family:Arial,sans-serif}
+h1{text-align:center;color:#f5b942;font-size:25px}
+.sub{text-align:center;color:#94a3b8;font-size:13px;margin-bottom:22px}
+.card{background:#131d2d;border:1px solid #29364b;border-radius:13px;padding:17px;margin:13px 0}
+h2{font-size:15px;color:#94a3b8;margin:0 0 14px}
+.price{font-size:32px;font-weight:bold;color:#f5b942}
+.big{font-size:25px;font-weight:bold}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.value{font-size:20px;font-weight:bold;margin-top:6px}
+.muted{font-size:12px;color:#94a3b8}
+.green{color:#35d07f}.red{color:#ff6262}.yellow{color:#f5b942}
+.signal{text-align:center;font-size:28px;font-weight:bold;padding:12px}
+button{width:100%;padding:14px;border:0;border-radius:10px;background:#f5b942;color:#101827;font-size:16px;font-weight:bold;margin-top:10px}
+.status{font-size:12px;color:#94a3b8;margin-top:10px;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
 
-<h2>₿ Bitcoin UP/DOWN Analyzer</h2>
-<p class="small">Kalshi 15 Minute • Practice Mode</p>
+<h1>₿ BITCOIN ANALYZER</h1>
+<div class="sub">BINANCE LIVE DATA + KALSHI DEMO</div>
 
 <div class="card">
-  <p class="small">LIVE BTC PRICE</p>
-  <div class="price" id="price">Connecting...</div>
-  <p class="small" id="updated">Waiting for market data...</p>
+<h2>LIVE BITCOIN PRICE</h2>
+<div class="price" id="btc">$--</div>
+<div class="status" id="binanceStatus">Connecting to Binance...</div>
 </div>
 
 <div class="card">
-  <div class="row">
-    <span>EMA 9</span>
-    <span class="value" id="ema9">--</span>
-  </div>
-  <div class="row">
-    <span>EMA 21</span>
-    <span class="value" id="ema21">--</span>
-  </div>
-  <div class="row">
-    <span>RSI 14</span>
-    <span class="value" id="rsi">--</span>
-  </div>
-  <div class="row">
-    <span>Trend</span>
-    <span class="value" id="trend">--</span>
-  </div>
+<h2>TECHNICAL INDICATORS</h2>
+<div class="grid">
+<div><div class="muted">EMA 9</div><div class="value" id="ema9">--</div></div>
+<div><div class="muted">EMA 21</div><div class="value" id="ema21">--</div></div>
+<div><div class="muted">RSI 14</div><div class="value" id="rsi">--</div></div>
+<div><div class="muted">TREND</div><div class="value" id="trend">--</div></div>
+</div>
 </div>
 
 <div class="card">
-  <p class="small">ANALYZER SIGNAL</p>
-  <div class="signal yellow" id="signal">WAIT</div>
-  <p class="small" id="reason">Collecting closed candles...</p>
+<h2>ANALYZER SIGNAL</h2>
+<div class="signal" id="signal">WAIT</div>
+<div class="muted" style="text-align:center">Indicator estimate — not a guarantee</div>
 </div>
 
 <div class="card">
-  <p class="small">DATA SOURCE</p>
-  <div id="status">Connecting to Bitcoin market...</div>
-  <p class="small">Analysis uses completed 1-minute candles.</p>
+<h2>KALSHI DEMO • BTC 15 MIN</h2>
+<div class="muted">MARKET</div>
+<div class="value" id="marketTitle">Loading market...</div>
+<div style="margin-top:15px" class="muted">TARGET PRICE</div>
+<div class="value yellow" id="target">--</div>
+<div class="grid" style="margin-top:18px">
+<div>
+<div class="muted">UP (YES) ASK</div>
+<div class="value green" id="up">--</div>
+</div>
+<div>
+<div class="muted">DOWN (NO) ASK</div>
+<div class="value red" id="down">--</div>
+</div>
+<div>
+<div class="muted">UP BID</div>
+<div class="value" id="upBid">--</div>
+</div>
+<div>
+<div class="muted">DOWN BID</div>
+<div class="value" id="downBid">--</div>
+</div>
+</div>
+<div style="margin-top:16px" class="muted">MARKET CLOSE</div>
+<div class="value" id="countdown">--</div>
+<div class="status" id="kalshiStatus">Connecting to Kalshi Demo...</div>
 </div>
 
-<button onclick="updateData()">REFRESH NOW</button>
+<button onclick="refreshAll()">REFRESH NOW</button>
+<div class="status" style="text-align:center">READ-ONLY ANALYZER • NO AUTOMATIC TRADES</div>
 
 <script>
-const API = "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=100";
-const PRICE_API = "https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT";
+const BINANCE="https://data-api.binance.vision/api/v3";
+const KALSHI="https://external-api.demo.kalshi.co/trade-api/v2";
 
-function ema(values, period) {
-  const k = 2 / (period + 1);
-  let result = values[0];
-  for (let i = 1; i < values.length; i++) {
-    result = values[i] * k + result * (1 - k);
-  }
-  return result;
+function fmt(n){
+ return Number(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function ema(values,period){
+ let k=2/(period+1), result=values[0];
+ for(let i=1;i<values.length;i++) result=values[i]*k+result*(1-k);
+ return result;
+}
+function rsi(values){
+ let gains=0,losses=0;
+ for(let i=values.length-14;i<values.length;i++){
+  let change=values[i]-values[i-1];
+  if(change>0) gains+=change; else losses-=change;
+ }
+ let avgGain=gains/14,avgLoss=losses/14;
+ if(avgLoss===0) return 100;
+ return 100-(100/(1+avgGain/avgLoss));
 }
 
-function calculateRSI(values, period=14) {
-  let gains = 0;
-  let losses = 0;
-  for (let i = values.length-period; i < values.length; i++) {
-    const change = values[i] - values[i-1];
-    if (change > 0) gains += change;
-    else losses -= change;
-  }
-  const avgGain = gains / period;
-  const avgLoss = losses / period;
-  if (avgLoss === 0) return 100;
-  return 100 - (100 / (1 + avgGain / avgLoss));
+async function loadBinance(){
+ const status=document.getElementById("binanceStatus");
+ try{
+  const results=await Promise.all([
+   fetch(BINANCE+"/ticker/price?symbol=BTCUSDT").then(r=>r.json()),
+   fetch(BINANCE+"/klines?symbol=BTCUSDT&interval=1m&limit=100").then(r=>r.json())
+  ]);
+  const price=Number(results[0].price);
+  const candles=results[1].slice(0,-1).map(c=>Number(c[4]));
+  if(!price||candles.length<22) throw new Error("Missing market data");
+  const e9=ema(candles,9),e21=ema(candles,21),rv=rsi(candles);
+  document.getElementById("btc").textContent="$"+fmt(price);
+  document.getElementById("ema9").textContent=fmt(e9);
+  document.getElementById("ema21").textContent=fmt(e21);
+  document.getElementById("rsi").textContent=rv.toFixed(2);
+  const trend=e9>e21?"BULLISH":e9<e21?"BEARISH":"SIDEWAYS";
+  document.getElementById("trend").textContent=trend;
+  document.getElementById("trend").className="value "+(trend==="BULLISH"?"green":trend==="BEARISH"?"red":"yellow");
+  let signal="WAIT",color="yellow";
+  if(e9>e21&&rv>50&&rv<70){signal="UP";color="green";}
+  if(e9<e21&&rv<50&&rv>30){signal="DOWN";color="red";}
+  document.getElementById("signal").textContent=signal;
+  document.getElementById("signal").className="signal "+color;
+  status.textContent="LIVE DATA CONNECTED • Binance BTC/USDT";
+ }catch(e){
+  status.textContent="Binance connection error: "+e.message;
+ }
 }
 
-async function updateData() {
-  const status = document.getElementById("status");
-  status.textContent = "Updating live data...";
-
-  try {
-    const responses = await Promise.all([
-      fetch(API),
-      fetch(PRICE_API)
-    ]);
-
-    if (!responses[0].ok || !responses[1].ok) {
-      throw new Error("Market data unavailable");
-    }
-
-    const candles = await responses[0].json();
-    const live = await responses[1].json();
-
-    // Exclude the candle that is still forming.
-    const closed = candles.slice(0, -1);
-    const closes = closed.map(c => Number(c[4]));
-
-    if (closes.length < 22) {
-      throw new Error("Not enough candle data");
-    }
-
-    const e9 = ema(closes.slice(-30), 9);
-    const e21 = ema(closes.slice(-50), 21);
-    const rsi = calculateRSI(closes);
-
-    const last = closes[closes.length - 1];
-    const previous = closes[closes.length - 2];
-
-    let trend = "SIDEWAYS";
-    let signal = "WAIT";
-    let reason = "No clear direction.";
-    let color = "yellow";
-
-    if (e9 > e21 && last > e9 && rsi > 50 && rsi < 70) {
-      trend = "BULLISH";
-      signal = "UP";
-      reason = "EMA 9 above EMA 21; price and RSI confirm upward momentum.";
-      color = "green";
-    } else if (e9 < e21 && last < e9 && rsi < 50 && rsi > 30) {
-      trend = "BEARISH";
-      signal = "DOWN";
-      reason = "EMA 9 below EMA 21; price and RSI confirm downward momentum.";
-      color = "red";
-    } else {
-      reason = "Mixed indicators. Wait for confirmation.";
-    }
-
-    if (rsi >= 70 || rsi <= 30) {
-      signal = "WAIT";
-      reason = "RSI is at an extreme. Wait for confirmation.";
-      color = "yellow";
-    }
-
-    document.getElementById("price").textContent =
-      "$" + Number(live.price).toLocaleString("en-US", {
-        minimumFractionDigits:2,
-        maximumFractionDigits:2
-      });
-
-    document.getElementById("ema9").textContent = e9.toFixed(2);
-    document.getElementById("ema21").textContent = e21.toFixed(2);
-    document.getElementById("rsi").textContent = rsi.toFixed(2);
-    document.getElementById("trend").textContent = trend;
-
-    const signalBox = document.getElementById("signal");
-    signalBox.textContent = signal;
-    signalBox.className = "signal " + color;
-
-    document.getElementById("reason").textContent = reason;
-    document.getElementById("updated").textContent =
-      "Last update: " + new Date().toLocaleTimeString();
-
-    status.textContent = "LIVE DATA CONNECTED • Binance BTC/USDT";
-  } catch (error) {
-    status.textContent = "Connection error: " + error.message;
-    document.getElementById("signal").textContent = "WAIT";
-    document.getElementById("reason").textContent =
-      "No reliable data. Do not trade.";
-  }
+function dollars(value){
+ if(value===null||value===undefined||value==="") return "--";
+ return Math.round(Number(value)*100)+"¢";
 }
-
-updateData();
-setInterval(updateData, 10000);
+async function loadKalshi(){
+ const status=document.getElementById("kalshiStatus");
+ try{
+  const response=await fetch(KALSHI+"/markets?series_ticker=KXBTC15M&status=open&limit=20");
+  if(!response.ok) throw new Error("HTTP "+response.status);
+  const data=await response.json();
+  const now=Date.now();
+  const markets=(data.markets||[]).filter(m=>
+   m.status!=="closed"&&m.close_time&&Date.parse(m.close_time)>now
+  );
+  if(!markets.length) throw new Error("No current or upcoming market found");
+  markets.sort((a,b)=>{
+   const aOpen=Date.parse(a.open_time||0),bOpen=Date.parse(b.open_time||0);
+   const aCurrent=aOpen<=now?0:1,bCurrent=bOpen<=now?0:1;
+   return aCurrent-bCurrent||aOpen-bOpen;
+  });
+  const m=markets[0];
+  const isOpen=Date.parse(m.open_time||0)<=now;
+  document.getElementById("marketTitle").textContent=m.title||m.ticker;
+  document.getElementById("target").textContent=
+   m.floor_strike!=null?"$"+fmt(m.floor_strike):
+   (m.yes_sub_title||"Not provided");
+  document.getElementById("up").textContent=dollars(m.yes_ask_dollars);
+  document.getElementById("down").textContent=dollars(m.no_ask_dollars);
+  document.getElementById("upBid").textContent=dollars(m.yes_bid_dollars);
+  document.getElementById("downBid").textContent=dollars(m.no_bid_dollars);
+  const close=Date.parse(m.close_time);
+  const seconds=Math.max(0,Math.floor((close-Date.now())/1000));
+  document.getElementById("countdown").textContent=
+   Math.floor(seconds/60)+"m "+(seconds%60)+"s";
+  status.textContent=(isOpen?"MARKET OPEN":"NEXT MARKET • NOT OPEN YET")+
+   " • Kalshi Demo • "+m.ticker;
+ }catch(e){
+  status.textContent="Kalshi connection issue: "+e.message+
+   ". Browser access may be restricted.";
+  document.getElementById("marketTitle").textContent="Market unavailable";
+ }
+}
+async function refreshAll(){
+ await Promise.all([loadBinance(),loadKalshi()]);
+}
+refreshAll();
+setInterval(refreshAll,10000);
 </script>
-
 </body>
 </html>
