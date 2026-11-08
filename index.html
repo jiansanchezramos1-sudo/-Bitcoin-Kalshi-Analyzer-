@@ -94,8 +94,8 @@ button {
 <button onclick="updateData()">REFRESH NOW</button>
 
 <script>
-const API = "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=100";
-const PRICE_API = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT";
+const API = "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=100";
+const PRICE_API = "https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT";
 
 function ema(values, period) {
   const k = 2 / (period + 1);
