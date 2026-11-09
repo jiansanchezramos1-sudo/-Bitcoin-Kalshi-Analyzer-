@@ -3,184 +3,355 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bitcoin Kalshi Analyzer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bitcoin 15 Min Pro Analyzer</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;padding:18px;background:#080d18;color:#f1f5f9;font-family:Arial,sans-serif}
-h1{text-align:center;color:#f5b942;font-size:25px}
-.sub{text-align:center;color:#94a3b8;font-size:13px;margin-bottom:22px}
-.card{background:#131d2d;border:1px solid #29364b;border-radius:13px;padding:17px;margin:13px 0}
-h2{font-size:15px;color:#94a3b8;margin:0 0 14px}
-.price{font-size:32px;font-weight:bold;color:#f5b942}
-.big{font-size:25px;font-weight:bold}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.value{font-size:20px;font-weight:bold;margin-top:6px}
-.muted{font-size:12px;color:#94a3b8}
-.green{color:#35d07f}.red{color:#ff6262}.yellow{color:#f5b942}
-.signal{text-align:center;font-size:28px;font-weight:bold;padding:12px}
-button{width:100%;padding:14px;border:0;border-radius:10px;background:#f5b942;color:#101827;font-size:16px;font-weight:bold;margin-top:10px}
-.status{font-size:12px;color:#94a3b8;margin-top:10px;overflow-wrap:anywhere}
+body{margin:0;background:#080d18;color:#eef3ff;font-family:Arial,sans-serif;padding:14px}
+.wrap{max-width:850px;margin:auto}
+h1{font-size:24px;margin:8px 0;color:#fff}
+h2{font-size:17px;margin:0 0 12px}
+p{color:#9eacc4;font-size:13px;line-height:1.5}
+.card{background:#111b2d;border:1px solid #263650;border-radius:14px;padding:15px;margin:12px 0}
+.price{font-size:34px;font-weight:bold;color:#fff}
+.muted{color:#91a2bd;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.tile{background:#0b1423;padding:12px;border-radius:10px;border:1px solid #25344d}
+.value{font-size:18px;font-weight:bold;margin-top:6px}
+.green{color:#36d995}.red{color:#ff6578}.yellow{color:#ffd166}
+.signal{font-size:28px;font-weight:900;text-align:center;padding:18px;border-radius:12px;background:#17243a}
+.signal.up{color:#36e39a;border:1px solid #36e39a}
+.signal.down{color:#ff7182;border:1px solid #ff7182}
+.signal.wait{color:#ffd166;border:1px solid #ffd166}
+.exchange{display:flex;justify-content:space-between;gap:8px;padding:11px 0;border-bottom:1px solid #263650}
+.exchange:last-child{border:0}
+button{background:#2459b8;color:white;border:0;padding:12px 16px;border-radius:9px;font-weight:bold}
+input{background:#0b1423;color:white;border:1px solid #344765;border-radius:8px;padding:10px;width:100%;margin:5px 0}
+.small{font-size:11px;color:#8798b3}
+.good{color:#36d995}.bad{color:#ff7182}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{text-align:left;padding:9px 5px;border-bottom:1px solid #293750}
+@media(max-width:420px){.grid{grid-template-columns:1fr 1fr}.price{font-size:28px}}
 </style>
 </head>
 <body>
-
-<h1>₿ BITCOIN ANALYZER</h1>
-<div class="sub">BINANCE LIVE DATA + KALSHI DEMO</div>
+<div class="wrap">
+<h1>₿ BITCOIN 15 MIN PRO</h1>
+<p>Live exchange comparison • Technical analysis • Kalshi Demo read-only</p>
 
 <div class="card">
-<h2>LIVE BITCOIN PRICE</h2>
-<div class="price" id="btc">$--</div>
-<div class="status" id="binanceStatus">Connecting to Binance...</div>
+<div class="muted">BINANCE BTC/USDT — LIVE PRICE</div>
+<div class="price" id="mainPrice">Connecting...</div>
+<div class="muted" id="mainStatus">Connecting to live market data...</div>
 </div>
 
 <div class="card">
-<h2>TECHNICAL INDICATORS</h2>
+<h2>LIVE BITCOIN EXCHANGE COMPARISON</h2>
+<div id="exchanges">
+<div class="exchange"><span>Binance</span><b>Connecting...</b></div>
+</div>
+<p>Prices are from different exchanges and may differ slightly. Offline means no usable feed was received.</p>
 <div class="grid">
-<div><div class="muted">EMA 9</div><div class="value" id="ema9">--</div></div>
-<div><div class="muted">EMA 21</div><div class="value" id="ema21">--</div></div>
-<div><div class="muted">RSI 14</div><div class="value" id="rsi">--</div></div>
-<div><div class="muted">TREND</div><div class="value" id="trend">--</div></div>
+<div class="tile"><div class="muted">Exchange average</div><div class="value" id="avgPrice">--</div></div>
+<div class="tile"><div class="muted">Highest vs lowest</div><div class="value" id="spread">--</div></div>
+<div class="tile"><div class="muted">Exchanges rising</div><div class="value green" id="rising">--</div></div>
+<div class="tile"><div class="muted">Exchanges falling</div><div class="value red" id="falling">--</div></div>
 </div>
 </div>
 
 <div class="card">
-<h2>ANALYZER SIGNAL</h2>
-<div class="signal" id="signal">WAIT</div>
-<div class="muted" style="text-align:center">Indicator estimate — not a guarantee</div>
+<h2>ANALYZER RECOMMENDATION</h2>
+<div id="signal" class="signal wait">WAIT</div>
+<p id="signalReason">Waiting for enough live data and indicators.</p>
+<div class="grid">
+<div class="tile"><div class="muted">Agreement score</div><div class="value" id="score">--</div><div class="small">Not a win probability</div></div>
+<div class="tile"><div class="muted">Market direction</div><div class="value" id="trend">--</div></div>
+<div class="tile"><div class="muted">RSI 14</div><div class="value" id="rsi">--</div></div>
+<div class="tile"><div class="muted">EMA 9 / EMA 21</div><div class="value" id="emas">--</div></div>
+</div>
 </div>
 
 <div class="card">
-<h2>KALSHI DEMO • BTC 15 MIN</h2>
-<div class="muted">MARKET</div>
-<div class="value" id="marketTitle">Loading market...</div>
-<div style="margin-top:15px" class="muted">TARGET PRICE</div>
-<div class="value yellow" id="target">--</div>
-<div class="grid" style="margin-top:18px">
-<div>
-<div class="muted">UP (YES) ASK</div>
-<div class="value green" id="up">--</div>
+<h2>15-MINUTE PRICE MOMENTUM</h2>
+<div class="grid">
+<div class="tile"><div class="muted">1-minute movement</div><div class="value" id="move1">--</div></div>
+<div class="tile"><div class="muted">5-minute movement</div><div class="value" id="move5">--</div></div>
+<div class="tile"><div class="muted">15-minute movement</div><div class="value" id="move15">--</div></div>
+<div class="tile"><div class="muted">Last candle</div><div class="value" id="candle">--</div></div>
 </div>
-<div>
-<div class="muted">DOWN (NO) ASK</div>
-<div class="value red" id="down">--</div>
-</div>
-<div>
-<div class="muted">UP BID</div>
-<div class="value" id="upBid">--</div>
-</div>
-<div>
-<div class="muted">DOWN BID</div>
-<div class="value" id="downBid">--</div>
-</div>
-</div>
-<div style="margin-top:16px" class="muted">MARKET CLOSE</div>
-<div class="value" id="countdown">--</div>
-<div class="status" id="kalshiStatus">Connecting to Kalshi Demo...</div>
+<p>Indicators use Binance 1-minute candles. Exchange agreement is a confirmation check, not a prediction guarantee.</p>
 </div>
 
-<button onclick="refreshAll()">REFRESH NOW</button>
-<div class="status" style="text-align:center">READ-ONLY ANALYZER • NO AUTOMATIC TRADES</div>
+<div class="card">
+<h2>KALSHI DEMO — BTC 15 MIN</h2>
+<div class="muted" id="kalshiStatus">Checking public Demo market...</div>
+<p id="marketTitle">Market loading...</p>
+<div class="grid">
+<div class="tile"><div class="muted">UP / YES ask</div><div class="value green" id="yesAsk">--</div></div>
+<div class="tile"><div class="muted">DOWN / NO ask</div><div class="value red" id="noAsk">--</div></div>
+<div class="tile"><div class="muted">UP / YES bid</div><div class="value" id="yesBid">--</div></div>
+<div class="tile"><div class="muted">DOWN / NO bid</div><div class="value" id="noBid">--</div></div>
+</div>
+<p id="marketRules">Contract settlement rules must be checked before trading.</p>
+<p class="small">This section reads public Demo market information only. It does not place orders.</p>
+</div>
+
+<div class="card">
+<h2>TRADE TRACKER</h2>
+<p>Record your manual Demo or real-money decisions. This tracker stays in this browser on this device.</p>
+<label class="small">Side</label>
+<select id="tradeSide">
+<option value="UP">UP</option><option value="DOWN">DOWN</option>
+</select>
+<label class="small">Amount ($)</label>
+<input id="tradeAmount" type="number" min="0" step="0.01" placeholder="Example: 2">
+<label class="small">Entry price (cents)</label>
+<input id="entryPrice" type="number" min="1" max="99" placeholder="Example: 45">
+<button onclick="recordTrade()">Save trade</button>
+<div id="tradeSummary" class="muted" style="margin-top:12px">No trades recorded yet.</div>
+<div id="tradeHistory"></div>
+<button onclick="clearTrades()" style="background:#63313b;margin-top:10px">Clear trade history</button>
+</div>
+
+<div class="card">
+<h2>CONNECTION STATUS</h2>
+<div id="connectionInfo" class="muted">Starting feeds...</div>
+<p class="small">Prices update when each exchange sends new data. If a connection drops, the dashboard will show it. Refresh the page to reconnect.</p>
+</div>
+
+<p class="small">Educational analysis only. No indicator guarantees a winning trade. Kalshi contract rules and settlement reference may differ from exchange spot prices. Never risk money you cannot afford to lose.</p>
+</div>
 
 <script>
-const BINANCE="https://data-api.binance.vision/api/v3";
-const KALSHI="https://external-api.demo.kalshi.co/trade-api/v2";
+const state = {
+ Binance:{price:null,previous:null,time:null,status:"Connecting"},
+ Coinbase:{price:null,previous:null,time:null,status:"Connecting"},
+ Kraken:{price:null,previous:null,time:null,status:"Connecting"},
+ Bitstamp:{price:null,previous:null,time:null,status:"Connecting"},
+ OKX:{price:null,previous:null,time:null,status:"Connecting"}
+};
+let candles=[];
+let lastSignal="WAIT";
+let sockets=[];
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+function updateExchange(name,price){
+ if(!Number.isFinite(price)||price<=0)return;
+ const s=state[name];
+ s.previous=s.price;
+ s.price=price;
+ s.time=Date.now();
+ s.status="LIVE";
+ renderExchanges();
+}
+function connectWS(name,url,onData){
+ try{
+  const ws=new WebSocket(url);
+  sockets.push(ws);
+  ws.onopen=()=>{state[name].status="LIVE";renderExchanges()};
+  ws.onmessage=e=>{try{onData(JSON.parse(e.data))}catch(err){}};
+  ws.onerror=()=>{state[name].status="Feed error";renderExchanges()};
+  ws.onclose=()=>{state[name].status="Disconnected";renderExchanges()};
+ }catch(e){state[name].status="Unavailable";renderExchanges()}
+}
+connectWS("Binance","wss://stream.binance.com:9443/ws/btcusdt@trade",d=>{
+ if(d.p)updateExchange("Binance",Number(d.p));
+});
+connectWS("Coinbase","wss://advanced-trade-ws.coinbase.com",d=>{
+ if(d.channel==="ticker"&&d.events){
+  d.events.forEach(ev=>(ev.tickers||[]).forEach(t=>{
+   if(t.product_id==="BTC-USD")updateExchange("Coinbase",Number(t.price));
+  }));
+ }
+});
+const kraken= new WebSocket("wss://ws.kraken.com/v2");
+sockets.push(kraken);
+kraken.onopen=()=>{
+ kraken.send(JSON.stringify({method:"subscribe",params:{channel:"ticker",symbol:["BTC/USD"]}}));
+ state.Kraken.status="LIVE";renderExchanges();
+};
+kraken.onmessage=e=>{
+ try{
+  const d=JSON.parse(e.data);
+  if(d.channel==="ticker"&&d.data&&d.data[0])updateExchange("Kraken",Number(d.data[0].last));
+ }catch(err){}
+};
+kraken.onerror=()=>{state.Kraken.status="Feed error";renderExchanges()};
 
-function fmt(n){
- return Number(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+async function getJSON(url){
+ const r=await fetch(url,{cache:"no-store"});
+ if(!r.ok)throw Error("HTTP "+r.status);
+ return r.json();
+}
+async function pollOtherExchanges(){
+ try{
+  const d=await getJSON("https://www.bitstamp.net/api/v2/ticker/btcusd/");
+  updateExchange("Bitstamp",Number(d.last));
+ }catch(e){state.Bitstamp.status="Unavailable"}
+ try{
+  const d=await getJSON("https://www.okx.com/api/v5/market/ticker?instId=BTC-USDT");
+  updateExchange("OKX",Number(d.data?.[0]?.last));
+ }catch(e){state.OKX.status="Unavailable"}
+ renderExchanges();
+}
+async function loadCandles(){
+ try{
+  const d=await getJSON("https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=100");
+  candles=d.map(x=>({time:x[0],open:+x[1],high:+x[2],low:+x[3],close:+x[4],volume:+x[5]}));
+  analyze();
+ }catch(e){
+  $("mainStatus").textContent="Binance candle feed unavailable. Waiting to reconnect.";
+ }
+}
+function renderExchanges(){
+ const names=Object.keys(state);
+ let html="",prices=[];
+ names.forEach(name=>{
+  const s=state[name];
+  if(s.price)prices.push(s.price);
+  let change="--",cls="";
+  if(s.price&&s.previous){
+   const diff=s.price-s.previous;
+   change=(diff>=0?"+":"")+fmt(diff);
+   cls=diff>0?"green":diff<0?"red":"";
+  }
+  html+=`<div class="exchange"><div><b>${name}</b><div class="small">${s.status} ${s.time?"• "+new Date(s.time).toLocaleTimeString():""}</div></div><div style="text-align:right"><b>${s.price?"$"+fmt(s.price):"--"}</b><div class="${cls} small">${change}</div></div></div>`;
+ });
+ $("exchanges").innerHTML=html;
+ if(state.Binance.price){
+  $("mainPrice").textContent="$"+fmt(state.Binance.price);
+  $("mainStatus").textContent="Binance live trade feed • Updated "+new Date(state.Binance.time).toLocaleTimeString();
+ }
+ if(prices.length){
+  $("avgPrice").textContent="$"+fmt(prices.reduce((a,b)=>a+b,0)/prices.length);
+  $("spread").textContent="$"+fmt(Math.max(...prices)-Math.min(...prices));
+ }
+ let up=0,down=0;
+ names.forEach(n=>{
+  const s=state[n];
+  if(s.price&&s.previous){
+   if(s.price>s.previous)up++;
+   if(s.price<s.previous)down++;
+  }
+ });
+ $("rising").textContent=up;
+ $("falling").textContent=down;
+ $("connectionInfo").textContent=names.map(n=>n+": "+state[n].status).join(" | ");
 }
 function ema(values,period){
- let k=2/(period+1), result=values[0];
- for(let i=1;i<values.length;i++) result=values[i]*k+result*(1-k);
+ if(values.length<period)return null;
+ const k=2/(period+1);
+ let result=values.slice(0,period).reduce((a,b)=>a+b,0)/period;
+ for(let i=period;i<values.length;i++)result=values[i]*k+result*(1-k);
  return result;
 }
-function rsi(values){
+function rsi(values,period=14){
+ if(values.length<=period)return null;
  let gains=0,losses=0;
- for(let i=values.length-14;i<values.length;i++){
-  let change=values[i]-values[i-1];
-  if(change>0) gains+=change; else losses-=change;
+ for(let i=values.length-period;i<values.length;i++){
+  const diff=values[i]-values[i-1];
+  if(diff>0)gains+=diff;else losses-=diff;
  }
- let avgGain=gains/14,avgLoss=losses/14;
- if(avgLoss===0) return 100;
- return 100-(100/(1+avgGain/avgLoss));
+ if(losses===0)return 100;
+ return 100-(100/(1+gains/losses));
 }
-
-async function loadBinance(){
- const status=document.getElementById("binanceStatus");
- try{
-  const results=await Promise.all([
-   fetch(BINANCE+"/ticker/price?symbol=BTCUSDT").then(r=>r.json()),
-   fetch(BINANCE+"/klines?symbol=BTCUSDT&interval=1m&limit=100").then(r=>r.json())
-  ]);
-  const price=Number(results[0].price);
-  const candles=results[1].slice(0,-1).map(c=>Number(c[4]));
-  if(!price||candles.length<22) throw new Error("Missing market data");
-  const e9=ema(candles,9),e21=ema(candles,21),rv=rsi(candles);
-  document.getElementById("btc").textContent="$"+fmt(price);
-  document.getElementById("ema9").textContent=fmt(e9);
-  document.getElementById("ema21").textContent=fmt(e21);
-  document.getElementById("rsi").textContent=rv.toFixed(2);
-  const trend=e9>e21?"BULLISH":e9<e21?"BEARISH":"SIDEWAYS";
-  document.getElementById("trend").textContent=trend;
-  document.getElementById("trend").className="value "+(trend==="BULLISH"?"green":trend==="BEARISH"?"red":"yellow");
-  let signal="WAIT",color="yellow";
-  if(e9>e21&&rv>50&&rv<70){signal="UP";color="green";}
-  if(e9<e21&&rv<50&&rv>30){signal="DOWN";color="red";}
-  document.getElementById("signal").textContent=signal;
-  document.getElementById("signal").className="signal "+color;
-  status.textContent="LIVE DATA CONNECTED • Binance BTC/USDT";
- }catch(e){
-  status.textContent="Binance connection error: "+e.message;
- }
-}
-
-function dollars(value){
- if(value===null||value===undefined||value==="") return "--";
- return Math.round(Number(value)*100)+"¢";
+function analyze(){
+ if(candles.length<30)return;
+ const closes=candles.map(c=>c.close);
+ const e9=ema(closes,9),e21=ema(closes,21),rv=rsi(closes);
+ const current=closes[closes.length-1];
+ const previous=closes[closes.length-2];
+ const trend=e9>e21?"BULLISH":e9<e21?"BEARISH":"SIDEWAYS";
+ $("trend").textContent=trend;
+ $("rsi").textContent=rv.toFixed(2);
+ $("emas").textContent=fmt(e9)+" / "+fmt(e21);
+ $("move1").textContent=((current-previous)/previous*100).toFixed(3)+"%";
+ const move=(n)=>((current-closes[closes.length-1-n])/closes[closes.length-1-n]*100);
+ $("move5").textContent=move(5).toFixed(3)+"%";
+ $("move15").textContent=move(15).toFixed(3)+"%";
+ $("candle").textContent=current>candles[candles.length-1].open?"GREEN":current<candles[candles.length-1].open?"RED":"FLAT";
+ let score=0,reasons=[];
+ if(e9>e21){score++;reasons.push("EMA 9 above EMA 21");}
+ else if(e9<e21){score--;reasons.push("EMA 9 below EMA 21");}
+ if(rv>52&&rv<70){score++;reasons.push("RSI bullish");}
+ else if(rv<48&&rv>30){score--;reasons.push("RSI bearish");}
+ else if(rv>=70)reasons.push("RSI high: possible overbought");
+ else if(rv<=30)reasons.push("RSI low: possible oversold");
+ if(current>previous){score++;reasons.push("Latest candle rising");}
+ else if(current<previous){score--;reasons.push("Latest candle falling");}
+ let exchangeUp=0,exchangeDown=0;
+ Object.values(state).forEach(s=>{
+  if(s.price&&s.previous){
+   if(s.price>s.previous)exchangeUp++;
+   if(s.price<s.previous)exchangeDown++;
+  }
+ });
+ const available=Object.values(state).filter(s=>s.price).length;
+ let direction="WAIT";
+ if(available>=3&&exchangeUp>=2&&exchangeUp>exchangeDown)score++;
+ if(available>=3&&exchangeDown>=2&&exchangeDown>exchangeUp)score--;
+ // Conservative: require indicators and exchange movement to agree.
+ if(score>=3&&e9>e21&&rv>50&&rv<70&&exchangeUp>=2)direction="UP";
+ if(score<=-3&&e9<e21&&rv<50&&rv>30&&exchangeDown>=2)direction="DOWN";
+ $("score").textContent=Math.abs(score)+"/4";
+ const box=$("signal");
+ box.className="signal "+(direction==="UP"?"up":direction==="DOWN"?"down":"wait");
+ box.textContent=direction==="WAIT"?"WAIT":direction==="UP"?"BET UP":"BET DOWN";
+ $("signalReason").textContent=reasons.join(" • ")+" • Exchange rising: "+exchangeUp+", falling: "+exchangeDown+". "+(direction==="WAIT"?"Conditions are not strong or aligned enough.":"Conditions currently agree, but this is not a guarantee.");
+ lastSignal=direction;
 }
 async function loadKalshi(){
- const status=document.getElementById("kalshiStatus");
  try{
-  const response=await fetch(KALSHI+"/markets?series_ticker=KXBTC15M&status=open&limit=20");
-  if(!response.ok) throw new Error("HTTP "+response.status);
-  const data=await response.json();
+  const d=await getJSON("https://external-api.demo.kalshi.co/trade-api/v2/markets?series_ticker=KXBTC15M&status=open&limit=20");
   const now=Date.now();
-  const markets=(data.markets||[]).filter(m=>
-   m.status!=="closed"&&m.close_time&&Date.parse(m.close_time)>now
-  );
-  if(!markets.length) throw new Error("No current or upcoming market found");
-  markets.sort((a,b)=>{
-   const aOpen=Date.parse(a.open_time||0),bOpen=Date.parse(b.open_time||0);
-   const aCurrent=aOpen<=now?0:1,bCurrent=bOpen<=now?0:1;
-   return aCurrent-bCurrent||aOpen-bOpen;
-  });
+  const markets=(d.markets||[]).filter(m=>m.status==="active"&&Date.parse(m.open_time)<=now&&Date.parse(m.close_time)>now);
+  markets.sort((a,b)=>Date.parse(a.close_time)-Date.parse(b.close_time));
   const m=markets[0];
-  const isOpen=Date.parse(m.open_time||0)<=now;
-  document.getElementById("marketTitle").textContent=m.title||m.ticker;
-  document.getElementById("target").textContent=
-   m.floor_strike!=null?"$"+fmt(m.floor_strike):
-   (m.yes_sub_title||"Not provided");
-  document.getElementById("up").textContent=dollars(m.yes_ask_dollars);
-  document.getElementById("down").textContent=dollars(m.no_ask_dollars);
-  document.getElementById("upBid").textContent=dollars(m.yes_bid_dollars);
-  document.getElementById("downBid").textContent=dollars(m.no_bid_dollars);
-  const close=Date.parse(m.close_time);
-  const seconds=Math.max(0,Math.floor((close-Date.now())/1000));
-  document.getElementById("countdown").textContent=
-   Math.floor(seconds/60)+"m "+(seconds%60)+"s";
-  status.textContent=(isOpen?"MARKET OPEN":"NEXT MARKET • NOT OPEN YET")+
-   " • Kalshi Demo • "+m.ticker;
+  if(!m){$("kalshiStatus").textContent="No currently active market returned.";return}
+  $("kalshiStatus").textContent="Demo market data connected • "+m.ticker;
+  $("marketTitle").textContent=m.title||"BTC 15-minute market";
+  const cents=x=>x===undefined||x===null?"--":Math.round(Number(x)*100)+"¢";
+  $("yesAsk").textContent=cents(m.yes_ask_dollars??(m.yes_ask!=null?m.yes_ask/100:null));
+  $("noAsk").textContent=cents(m.no_ask_dollars??(m.no_ask!=null?m.no_ask/100:null));
+  $("yesBid").textContent=cents(m.yes_bid_dollars??(m.yes_bid!=null?m.yes_bid/100:null));
+  $("noBid").textContent=cents(m.no_bid_dollars??(m.no_bid!=null?m.no_bid/100:null));
+  $("marketRules").textContent="Close: "+new Date(m.close_time).toLocaleTimeString()+" • Check the market's full settlement rules. Binance spot is not necessarily the official settlement index.";
  }catch(e){
-  status.textContent="Kalshi connection issue: "+e.message+
-   ". Browser access may be restricted.";
-  document.getElementById("marketTitle").textContent="Market unavailable";
+  $("kalshiStatus").textContent="Kalshi Demo feed unavailable in this browser. Other feeds can still work.";
  }
 }
-async function refreshAll(){
- await Promise.all([loadBinance(),loadKalshi()]);
+function getTrades(){
+ try{return JSON.parse(localStorage.getItem("btcTrades")||"[]")}catch(e){return []}
 }
-refreshAll();
-setInterval(refreshAll,10000);
+function recordTrade(){
+ const side=$("tradeSide").value;
+ const amount=Number($("tradeAmount").value);
+ const entry=Number($("entryPrice").value);
+ if(!(amount>0)||!(entry>0&&entry<100)){alert("Enter a valid amount and entry price.");return}
+ const trades=getTrades();
+ trades.unshift({side,amount,entry,date:new Date().toLocaleString(),result:"Pending"});
+ localStorage.setItem("btcTrades",JSON.stringify(trades));
+ $("tradeAmount").value="";$("entryPrice").value="";
+ renderTrades();
+}
+function clearTrades(){
+ if(confirm("Delete all saved trade records on this device?")){
+  localStorage.removeItem("btcTrades");renderTrades();
+ }
+}
+function renderTrades(){
+ const t=getTrades();
+ $("tradeSummary").textContent=t.length+" trades recorded. Pending results are not included in profit/loss.";
+ $("tradeHistory").innerHTML=t.slice(0,20).map(x=>`<div class="exchange"><span>${x.side} • $${x.amount.toFixed(2)} • ${x.entry}¢</span><span class="small">${x.date}</span></div>`).join("");
+}
+renderTrades();
+renderExchanges();
+pollOtherExchanges();
+loadCandles();
+loadKalshi();
+setInterval(pollOtherExchanges,5000);
+setInterval(loadCandles,15000);
+setInterval(loadKalshi,20000);
 </script>
 </body>
 </html>
